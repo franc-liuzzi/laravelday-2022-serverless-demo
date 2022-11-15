@@ -1,4 +1,4 @@
-service: laravel
+service: laravelday-2022-sls-demo
 
 provider:
     name: aws
@@ -8,15 +8,24 @@ provider:
     stage: dev
     runtime: provided.al2
     lambdaHashingVersion: 20201221
+    profile: laravelday
+    environment:
+        APP_KEY: base64:hIloa+AjBd2v4w2CqjNP+DkdzW7rKTZFqJmvw2DnRiM=
+        DB_CONNECTION: mysql
+        DB_HOST: ${ssm:/laravelday/db/host}
+        DB_USERNAME: ${ssm:/laravelday/db/user}
+        DB_PASSWORD: ${ssm:/laravelday/db/password}
+        DB_DATABASE: laravelday
 
 package:
     # Directories to exclude from deployment
     patterns:
-        - '!node_modules/**'
-        - '!public/storage'
-        - '!resources/assets/**'
-        - '!storage/**'
-        - '!tests/**'
+        - "!node_modules/**"
+        - "!public/storage"
+        - "!resources/assets/**"
+        - "!storage/**"
+        - "!tests/**"
+        - "!.env"
 
 functions:
     # This function runs the Laravel website/API
@@ -24,15 +33,15 @@ functions:
         handler: public/index.php
         timeout: 28 # in seconds (API Gateway has a timeout of 29 seconds)
         layers:
-            - ${bref:layer.php-80-fpm}
+            - ${bref:layer.php-81-fpm}
         events:
-            - httpApi: '*'
+            - httpApi: "*"
     # This function lets us run artisan commands in Lambda
     artisan:
         handler: artisan
         timeout: 120 # in seconds
         layers:
-            - ${bref:layer.php-80} # PHP
+            - ${bref:layer.php-81} # PHP
             - ${bref:layer.console} # The "console" layer
 
 plugins:
