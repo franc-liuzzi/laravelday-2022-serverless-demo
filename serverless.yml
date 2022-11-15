@@ -9,6 +9,13 @@ provider:
     runtime: provided.al2
     lambdaHashingVersion: 20201221
     profile: laravelday
+    iam:
+        role:
+            statements:
+                - Effect: Allow
+                  Resource: !GetAtt CacheTable.Arn
+                  Action:
+                    - dynamodb:*
     environment:
         APP_KEY: base64:hIloa+AjBd2v4w2CqjNP+DkdzW7rKTZFqJmvw2DnRiM=
         DB_CONNECTION: mysql
@@ -16,6 +23,8 @@ provider:
         DB_USERNAME: ${ssm:/laravelday/db/user}
         DB_PASSWORD: ${ssm:/laravelday/db/password}
         DB_DATABASE: laravelday
+        CACHE_DRIVER: dynamodb
+        DYNAMODB_CACHE_TABLE: !Ref CacheTable
 
 package:
     # Directories to exclude from deployment
@@ -46,32 +55,48 @@ functions:
 
 constructs:
 
-  website:
-    type: server-side-website
-    assets:
-      # '/js/*': public/js
-      # '/css/*': public/css
-      '/favicon.ico': public/favicon.ico
-      '/robots.txt': public/robots.txt
-      # add here any file or directory that needs to be served from S3
-    # Laravel uses some headers that are not in CloudFront's default whitelist.
-    # To add any, we need to list all accepted headers to pass through.
-    # https://github.com/getlift/lift/blob/master/docs/server-side-website.md#forwarded-headers
-    forwardedHeaders:
-      - Accept
-      - Accept-Language
-      - Content-Type
-      - Origin
-      - Referer
-      - User-Agent
-      - X-Forwarded-Host
-      - X-Requested-With
-      # Laravel Framework Headers
-      - X-Csrf-Token
-      # Other Headers (e.g. Livewire, Laravel Nova), uncomment based on your needs
-      # - X-Livewire
-      # - X-Inertia
+    website:
+        type: server-side-website
+        assets:
+            # '/js/*': public/js
+            # '/css/*': public/css
+            "/favicon.ico": public/favicon.ico
+            "/robots.txt": public/robots.txt
+            # add here any file or directory that needs to be served from S3
+        # Laravel uses some headers that are not in CloudFront's default whitelist.
+        # To add any, we need to list all accepted headers to pass through.
+        # https://github.com/getlift/lift/blob/master/docs/server-side-website.md#forwarded-headers
+        forwardedHeaders:
+            - Accept
+            - Accept-Language
+            - Content-Type
+            - Origin
+            - Referer
+            - User-Agent
+            - X-Forwarded-Host
+            - X-Requested-With
+            # Laravel Framework Headers
+            - X-Csrf-Token
+            # Other Headers (e.g. Livewire, Laravel Nova), uncomment based on your needs
+            # - X-Livewire
+            # - X-Inertia
+
+resources:
+    Resources:
+        CacheTable:
+            Type: AWS::DynamoDB::Table
+            Properties:
+                AttributeDefinitions:
+                    -   AttributeName: id
+                        AttributeType: S
+                BillingMode: PAY_PER_REQUEST
+                TimeToLiveSpecification:
+                    AttributeName: ttl
+                    Enabled: true
+                KeySchema:
+                    -   AttributeName: id
+                        KeyType: HASH
 
 plugins:
-  - ./vendor/bref/bref
-  - serverless-lift
+    - ./vendor/bref/bref
+    - serverless-lift
