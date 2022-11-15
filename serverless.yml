@@ -25,6 +25,8 @@ provider:
         DB_DATABASE: laravelday
         CACHE_DRIVER: dynamodb
         DYNAMODB_CACHE_TABLE: !Ref CacheTable
+        QUEUE_CONNECTION: sqs
+        SQS_QUEUE: ${construct:jobs.queueUrl}
 
 package:
     # Directories to exclude from deployment
@@ -54,6 +56,13 @@ functions:
             - ${bref:layer.console} # The "console" layer
 
 constructs:
+    
+    jobs:
+        type: queue
+        worker:
+            handler: worker.php
+            layers:
+                - ${bref:layer.php-74}
 
     website:
         type: server-side-website
