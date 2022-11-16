@@ -31,11 +31,10 @@ class CacheSetCommand extends Command
             $this->info('Cache key successfully set');
 
             return Command::SUCCESS;
-    } else {
-            $this->error('Error setting cache key'); 
+        } else {
+            $this->error('Error setting cache key');
 
             return Command::FAILURE;
         }
-
     }
 }
