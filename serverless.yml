@@ -62,7 +62,7 @@ constructs:
         worker:
             handler: worker.php
             layers:
-                - ${bref:layer.php-74}
+                - ${bref:layer.php-81}
 
     website:
         type: server-side-website
